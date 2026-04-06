@@ -1,0 +1,89 @@
+{% extends "base.html" %}
+{% block title %}Customers{% endblock %}
+
+{% block content %}
+<!-- ── Customers Page ──────────────────────────────────────────── -->
+
+<div class="page-header">
+  <div>
+    <h1>👥 Customers</h1>
+    <div class="subtitle">View and manage all registered cafe customers.</div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('modal-add-customer')">+ Add Customer</button>
+</div>
+
+<!-- Customers Table -->
+{% if customers %}
+<div class="card">
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Name</th>
+          <th>Contact</th>
+          <th>Total Orders</th>
+          <th>Joined</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for customer in customers %}
+        <tr>
+          <td class="text-muted">{{ customer.id }}</td>
+          <td class="td-name">
+            <span style="font-size:20px; margin-right:8px;">👤</span>
+            {{ customer.name }}
+          </td>
+          <td class="text-muted">{{ customer.contact }}</td>
+          <td>
+            <span class="badge badge-confirmed">{{ customer.orders | length }} orders</span>
+          </td>
+          <td class="text-muted">{{ customer.created_at.strftime('%d %b %Y') }}</td>
+          <td>
+            <form method="POST" action="{{ url_for('delete_customer', cust_id=customer.id) }}"
+                  id="del-cust-{{ customer.id }}" style="display:inline">
+              <button type="button" class="btn btn-danger btn-sm"
+                      onclick="confirmDelete('del-cust-{{ customer.id }}')">🗑️ Remove</button>
+            </form>
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">👥</div>
+  No customers yet.
+</div>
+{% endif %}
+
+
+<!-- ═══════════ MODAL: Add Customer ══════════════════════════════ -->
+<div class="modal-overlay" id="modal-add-customer">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ Add Customer</div>
+      <button class="modal-close" onclick="closeModal('modal-add-customer')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_customer') }}">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" name="name" class="form-control" required placeholder="Customer name">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Number *</label>
+        <input type="text" name="contact" class="form-control" required placeholder="Phone number">
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+        <button type="button" class="btn btn-outline"
+                onclick="closeModal('modal-add-customer')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Customer</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}Staff Management{% endblock %}
+
+{% block content %}
+<!-- ── Staff Management Page ─────────────────────────────────── -->
+
+<div class="page-header">
+  <div>
+    <h1>👨‍🍳 Staff Management</h1>
+    <div class="subtitle">Manage your cafe team — waiters, chefs, cashiers, and managers.</div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('modal-add-staff')">+ Add Staff</button>
+</div>
+
+<!-- Staff Cards Grid -->
+{% if employees %}
+<div class="staff-grid">
+  {% for emp in employees %}
+  <div class="staff-card">
+    <!-- Avatar with first letter of name -->
+    <div class="staff-avatar">
+      {% if emp.position == 'Chef' %}👨‍🍳
+      {% elif emp.position == 'Waiter' %}🧑‍🍽️
+      {% elif emp.position == 'Manager' %}👔
+      {% elif emp.position == 'Cashier' %}💼
+      {% else %}👤{% endif %}
+    </div>
+    <h3>{{ emp.name }}</h3>
+    <div class="position">{{ emp.position }}</div>
+    <div class="contact">📞 {{ emp.contact }}</div>
+    <div class="text-muted" style="font-size:11px; margin-bottom:14px;">
+      Since {{ emp.created_at.strftime('%b %Y') }}
+    </div>
+    <div style="display:flex; gap:8px; justify-content:center;">
+      <!-- Edit opens modal with pre-filled data -->
+      <button class="btn btn-outline btn-sm"
+              onclick="editStaff({{ emp.id }}, '{{ emp.name }}', '{{ emp.position }}', '{{ emp.contact }}')">
+        ✏️ Edit
+      </button>
+      <!-- Delete form -->
+      <form method="POST" action="{{ url_for('delete_staff', emp_id=emp.id) }}"
+            id="del-staff-{{ emp.id }}" style="display:inline">
+        <button type="button" class="btn btn-danger btn-sm"
+                onclick="confirmDelete('del-staff-{{ emp.id }}')">🗑️</button>
+      </form>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">👤</div>
+  No staff yet. Add your first team member!
+</div>
+{% endif %}
+
+
+<!-- ═══════════ MODAL: Add Staff ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-add-staff">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">➕ Add Staff Member</div>
+      <button class="modal-close" onclick="closeModal('modal-add-staff')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_staff') }}">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" name="name" class="form-control" required placeholder="e.g. Ravi Kumar">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Position *</label>
+        <select name="position" class="form-control" required>
+          <option value="">Select role</option>
+          <option value="Manager">Manager</option>
+          <option value="Chef">Chef</option>
+          <option value="Waiter">Waiter</option>
+          <option value="Cashier">Cashier</option>
+          <option value="Barista">Barista</option>
+          <option value="Cleaner">Cleaner</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Number *</label>
+        <input type="text" name="contact" class="form-control" required placeholder="10-digit phone">
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-add-staff')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Add Staff</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- ═══════════ MODAL: Edit Staff ════════════════════════════════ -->
+<div class="modal-overlay" id="modal-edit-staff">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">✏️ Edit Staff Member</div>
+      <button class="modal-close" onclick="closeModal('modal-edit-staff')">✕</button>
+    </div>
+    <!-- Action set dynamically by JS -->
+    <form method="POST" id="edit_staff_form">
+      <input type="hidden" name="id" id="edit_staff_id">
+      <div class="form-group">
+        <label class="form-label">Full Name *</label>
+        <input type="text" name="name" id="edit_staff_name" class="form-control" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Position *</label>
+        <select name="position" id="edit_staff_position" class="form-control" required>
+          <option value="Manager">Manager</option>
+          <option value="Chef">Chef</option>
+          <option value="Waiter">Waiter</option>
+          <option value="Cashier">Cashier</option>
+          <option value="Barista">Barista</option>
+          <option value="Cleaner">Cleaner</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Contact Number *</label>
+        <input type="text" name="contact" id="edit_staff_contact" class="form-control" required>
+      </div>
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-edit-staff')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}

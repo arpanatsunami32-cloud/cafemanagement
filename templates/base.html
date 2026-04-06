@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Cafe Manager{% endblock %} — The Brew House</title>
+  <meta name="description" content="Modern Cafe Management System — manage orders, menu, staff, and reservations.">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>☕</text></svg>">
+</head>
+<body>
+<div class="layout">
+
+  <!-- ── Sidebar Navigation ──────────────────────────────── -->
+  <aside class="sidebar">
+
+    <!-- Logo & Brand -->
+    <div class="sidebar-logo">
+      <div class="logo-icon">☕</div>
+      <h2>The Brew House</h2>
+      <p>Cafe Management</p>
+    </div>
+
+    <!-- Mini stats in sidebar -->
+    <div class="sidebar-stats">
+      <div class="stat-mini">
+        <div class="val">{{ total_orders }}</div>
+        <div class="lbl">Orders</div>
+      </div>
+      <div class="stat-mini">
+        <div class="val">{{ pending_orders }}</div>
+        <div class="lbl">Pending</div>
+      </div>
+      <div class="stat-mini">
+        <div class="val">{{ total_customers }}</div>
+        <div class="lbl">Customers</div>
+      </div>
+      <div class="stat-mini">
+        <div class="val">{{ total_staff }}</div>
+        <div class="lbl">Staff</div>
+      </div>
+    </div>
+
+    <!-- Navigation Links -->
+    <nav class="nav-section">
+      <div class="nav-label">Main</div>
+      <a href="{{ url_for('dashboard') }}"
+         class="nav-link {% if request.endpoint == 'dashboard' %}active{% endif %}">
+        <span class="icon">📊</span> Dashboard
+      </a>
+      <a href="{{ url_for('orders') }}"
+         class="nav-link {% if 'order' in request.endpoint %}active{% endif %}">
+        <span class="icon">🧾</span> Orders
+      </a>
+      <a href="{{ url_for('billing') }}"
+         class="nav-link {% if request.endpoint == 'billing' %}active{% endif %}">
+        <span class="icon">💳</span> Billing
+      </a>
+
+      <div class="nav-label" style="margin-top:16px">Management</div>
+      <a href="{{ url_for('menu') }}"
+         class="nav-link {% if request.endpoint == 'menu' %}active{% endif %}">
+        <span class="icon">🍽️</span> Menu
+      </a>
+      <a href="{{ url_for('reservations') }}"
+         class="nav-link {% if request.endpoint == 'reservations' %}active{% endif %}">
+        <span class="icon">📅</span> Reservations
+      </a>
+      <a href="{{ url_for('staff') }}"
+         class="nav-link {% if request.endpoint == 'staff' %}active{% endif %}">
+        <span class="icon">👨‍🍳</span> Staff
+      </a>
+      <a href="{{ url_for('customers') }}"
+         class="nav-link {% if request.endpoint == 'customers' %}active{% endif %}">
+        <span class="icon">👥</span> Customers
+      </a>
+    </nav>
+
+    <div class="sidebar-footer">
+      © 2024 The Brew House
+    </div>
+  </aside>
+
+  <!-- ── Main Content ─────────────────────────────────────── -->
+  <main class="main-content">
+
+    <!-- Flash Messages (top-right popups) -->
+    <div class="flash-container">
+      {% with messages = get_flashed_messages(with_categories=true) %}
+        {% for category, message in messages %}
+          <div class="flash flash-{{ category }}">
+            {% if category == 'success' %}✅{% elif category == 'danger' %}❌{% else %}ℹ️{% endif %}
+            {{ message }}
+          </div>
+        {% endfor %}
+      {% endwith %}
+    </div>
+
+    {% block content %}{% endblock %}
+  </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/main.js') }}"></script>
+{% block scripts %}{% endblock %}
+</body>
+</html>

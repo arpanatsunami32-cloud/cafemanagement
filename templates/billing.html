@@ -1,0 +1,154 @@
+{% extends "base.html" %}
+{% block title %}Billing & Payments{% endblock %}
+
+{% block content %}
+<!-- ── Billing & Payment Page ─────────────────────────────────── -->
+
+<div class="page-header">
+  <div>
+    <h1>💳 Billing & Payments</h1>
+    <div class="subtitle">Process payments for completed orders.</div>
+  </div>
+</div>
+
+<div class="dash-grid">
+
+  <!-- Left: Unpaid Orders -->
+  <div>
+    <div class="card">
+      <div class="card-title">⏳ Unpaid Orders</div>
+
+      {% if unpaid_orders %}
+      <div style="display:flex; flex-direction:column; gap:12px;">
+        {% for order in unpaid_orders %}
+        <div style="background:var(--bg-primary); border:1px solid var(--border);
+                    border-radius:var(--radius-sm); padding:16px;">
+          <!-- Order Summary Row -->
+          <div class="flex justify-between align-center" style="margin-bottom:10px;">
+            <div>
+              <div style="font-weight:700;">Order #{{ order.id }}</div>
+              <div class="text-muted" style="font-size:12px;">
+                {{ order.customer.name }} •
+                {{ order.order_date.strftime('%d %b, %I:%M %p') }}
+              </div>
+            </div>
+            <span class="badge badge-{{ order.status.lower() }}">{{ order.status }}</span>
+          </div>
+
+          <!-- Items quick preview (max 3) -->
+          {% for oi in order.items[:3] %}
+          <div class="flex justify-between" style="font-size:13px; color:var(--text-secondary); margin-bottom:4px;">
+            <span>{{ oi.menu_item.item_name }} × {{ oi.quantity }}</span>
+            <span>₹{{ "%.2f"|format(oi.subtotal) }}</span>
+          </div>
+          {% endfor %}
+          {% if order.items | length > 3 %}
+          <div class="text-muted" style="font-size:12px;">
+            + {{ (order.items | length) - 3 }} more item(s)
+          </div>
+          {% endif %}
+
+          <!-- Total + Pay Form -->
+          <div class="order-total-row" style="margin-top:10px; margin-bottom:10px;">
+            <span>Total</span>
+            <span>₹{{ "%.2f"|format(order.total_amount) }}</span>
+          </div>
+
+          {% if order.items %}
+          <form method="POST" action="{{ url_for('process_payment', order_id=order.id) }}"
+                style="display:flex; gap:8px; align-items:center;">
+            <select name="method" class="form-control" required style="flex:1;">
+              <option value="Cash">💵 Cash</option>
+              <option value="Card">💳 Card</option>
+              <option value="UPI">📱 UPI</option>
+            </select>
+            <button type="submit" class="btn btn-primary">Pay Now</button>
+          </form>
+          {% else %}
+          <div class="text-muted" style="font-size:12px;">⚠️ No items in this order.</div>
+          {% endif %}
+        </div>
+        {% endfor %}
+      </div>
+
+      {% else %}
+      <div class="empty-state" style="padding:32px;">
+        <div class="empty-icon">✅</div>
+        All orders have been paid!
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: Recent Payments -->
+  <div>
+    <div class="card">
+      <div class="card-title">✅ Recent Payments</div>
+
+      {% if paid_orders %}
+      <div style="display:flex; flex-direction:column; gap:10px;">
+        {% for payment in paid_orders %}
+        <div style="border:1px solid rgba(45,206,168,0.2); border-radius:var(--radius-sm);
+                    padding:14px; background:rgba(45,206,168,0.04);">
+          <div class="flex justify-between align-center">
+            <div>
+              <div style="font-weight:700; font-size:13px;">
+                Order #{{ payment.order_id }}
+              </div>
+              <div class="text-muted" style="font-size:11px;">
+                {{ payment.paid_at.strftime('%d %b %Y, %I:%M %p') }}
+              </div>
+            </div>
+            <div>
+              <div class="text-success" style="font-weight:700; font-size:16px;">
+                ₹{{ "%.2f"|format(payment.amount) }}
+              </div>
+              <div class="text-muted" style="font-size:11px; text-align:right;">
+                {{ payment.method }}
+              </div>
+            </div>
+          </div>
+        </div>
+        {% endfor %}
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:32px;">
+        <div class="empty-icon">💳</div>
+        No payments yet.
+      </div>
+      {% endif %}
+    </div>
+
+    <!-- Revenue Summary Card -->
+    <div class="card mt-16" style="border-color:var(--border-accent);">
+      <div class="card-title">📊 Revenue Summary</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:14px;">
+        <div class="flex justify-between">
+          <span class="text-muted">Total Payments</span>
+          <span>{{ paid_orders | length }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Cash Payments</span>
+          <span>{{ paid_orders | selectattr('method', 'equalto', 'Cash') | list | length }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Card Payments</span>
+          <span>{{ paid_orders | selectattr('method', 'equalto', 'Card') | list | length }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">UPI Payments</span>
+          <span>{{ paid_orders | selectattr('method', 'equalto', 'UPI') | list | length }}</span>
+        </div>
+        <div style="border-top:1px solid var(--border); padding-top:10px;"
+             class="flex justify-between">
+          <span style="font-weight:600;">Total Revenue</span>
+          <span class="text-accent" style="font-weight:700; font-size:18px;">
+            ₹{{ "%.2f"|format(paid_orders | sum(attribute='amount')) }}
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

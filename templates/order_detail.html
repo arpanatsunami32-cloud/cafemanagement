@@ -1,0 +1,161 @@
+{% extends "base.html" %}
+{% block title %}Order #{{ order.id }}{% endblock %}
+
+{% block content %}
+<!-- ── Order Detail Page ──────────────────────────────────────── -->
+
+<!-- Back + Header -->
+<div class="page-header">
+  <div>
+    <div style="margin-bottom:6px;">
+      <a href="{{ url_for('orders') }}" class="text-muted" style="font-size:13px;">← Back to Orders</a>
+    </div>
+    <h1>Order #{{ order.id }}</h1>
+    <div class="subtitle">
+      {{ order.customer.name }} •
+      {{ order.order_date.strftime('%d %b %Y, %I:%M %p') }} •
+      <span class="badge badge-{{ order.status.lower() }}">{{ order.status }}</span>
+    </div>
+  </div>
+  <!-- Update Status -->
+  <form method="POST" action="{{ url_for('update_order_status', order_id=order.id) }}"
+        style="display:flex; gap:8px; align-items:center;">
+    <select name="status" class="form-control" style="width:auto;">
+      {% for s in ['Pending','Preparing','Ready','Delivered','Cancelled'] %}
+      <option value="{{ s }}" {% if s == order.status %}selected{% endif %}>{{ s }}</option>
+      {% endfor %}
+    </select>
+    <button type="submit" class="btn btn-primary">Update</button>
+  </form>
+</div>
+
+
+<div class="dash-grid">
+
+  <!-- Left: Order Items -->
+  <div>
+    <div class="card mb-16">
+      <div class="card-title">🛒 Order Items</div>
+
+      <!-- Add Item Form -->
+      <form method="POST" action="{{ url_for('add_order_item', order_id=order.id) }}"
+            style="display:flex; gap:8px; margin-bottom:16px; flex-wrap:wrap;">
+        <select name="menu_item_id" class="form-control" style="flex:2; min-width:160px;" required>
+          <option value="">Select menu item</option>
+          {% for item in menu_items %}
+          <option value="{{ item.id }}">{{ item.item_name }} — ₹{{ item.price }}</option>
+          {% endfor %}
+        </select>
+        <input type="number" name="quantity" class="form-control" value="1" min="1"
+               style="width:70px;" required>
+        <button type="submit" class="btn btn-primary">Add</button>
+      </form>
+
+      <!-- Current Items List -->
+      {% if order.items %}
+      <div class="order-items-list">
+        {% for oi in order.items %}
+        <div class="order-item-row">
+          <div>
+            <div style="font-weight:600;">{{ oi.menu_item.item_name }}</div>
+            <div class="text-muted" style="font-size:12px;">
+              {{ oi.quantity }} × ₹{{ oi.menu_item.price }}
+            </div>
+          </div>
+          <div style="display:flex; align-items:center; gap:12px;">
+            <div class="text-accent" style="font-weight:700;">₹{{ "%.2f"|format(oi.subtotal) }}</div>
+            <form method="POST"
+                  action="{{ url_for('remove_order_item', order_id=order.id, item_id=oi.id) }}">
+              <button type="submit" class="btn btn-danger btn-sm">✕</button>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+
+        <!-- Order Total -->
+        <div class="order-total-row">
+          <span>Total Amount</span>
+          <span class="text-accent">₹{{ "%.2f"|format(order.total_amount) }}</span>
+        </div>
+      </div>
+      {% else %}
+      <div class="empty-state" style="padding:24px;">
+        <div class="empty-icon">🛒</div>
+        No items yet. Add items from the menu above.
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Right: Order Info -->
+  <div>
+    <div class="card mb-16">
+      <div class="card-title">👤 Customer Info</div>
+      <div style="display:flex; flex-direction:column; gap:10px; font-size:14px;">
+        <div class="flex justify-between">
+          <span class="text-muted">Name</span>
+          <span>{{ order.customer.name }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Contact</span>
+          <span>{{ order.customer.contact }}</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="card mb-16">
+      <div class="card-title">👨‍🍳 Staff Assigned</div>
+      <div style="font-size:14px;">
+        {% if order.employee %}
+        <div>{{ order.employee.name }}</div>
+        <div class="text-muted" style="font-size:12px;">{{ order.employee.position }}</div>
+        {% else %}
+        <span class="text-muted">No staff assigned</span>
+        {% endif %}
+      </div>
+    </div>
+
+    <!-- Payment Block (if order has items) -->
+    {% if order.items and not order.payment %}
+    <div class="card" style="border-color: var(--border-accent);">
+      <div class="card-title">💳 Process Payment</div>
+      <div class="text-muted mb-16" style="font-size:13px;">
+        Total: <strong class="text-accent">₹{{ "%.2f"|format(order.total_amount) }}</strong>
+      </div>
+      <form method="POST" action="{{ url_for('process_payment', order_id=order.id) }}">
+        <div class="form-group">
+          <label class="form-label">Payment Method</label>
+          <select name="method" class="form-control" required>
+            <option value="Cash">Cash</option>
+            <option value="Card">Card</option>
+            <option value="UPI">UPI</option>
+          </select>
+        </div>
+        <button type="submit" class="btn btn-primary" style="width:100%; justify-content:center;">
+          ✅ Confirm Payment
+        </button>
+      </form>
+    </div>
+    {% elif order.payment %}
+    <div class="card" style="border-color: var(--success);">
+      <div class="card-title" style="color:var(--success);">✅ Payment Received</div>
+      <div style="font-size:14px; display:flex; flex-direction:column; gap:8px;">
+        <div class="flex justify-between">
+          <span class="text-muted">Amount</span>
+          <span class="text-success">₹{{ "%.2f"|format(order.payment.amount) }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Method</span>
+          <span>{{ order.payment.method }}</span>
+        </div>
+        <div class="flex justify-between">
+          <span class="text-muted">Paid at</span>
+          <span>{{ order.payment.paid_at.strftime('%d %b, %I:%M %p') }}</span>
+        </div>
+      </div>
+    </div>
+    {% endif %}
+  </div>
+</div>
+
+{% endblock %}

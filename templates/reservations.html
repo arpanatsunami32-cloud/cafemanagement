@@ -1,0 +1,145 @@
+{% extends "base.html" %}
+{% block title %}Reservations{% endblock %}
+
+{% block content %}
+<!-- ── Table Reservations Page ───────────────────────────────── -->
+
+<div class="page-header">
+  <div>
+    <h1>📅 Table Reservations</h1>
+    <div class="subtitle">Manage table bookings and guest reservations.</div>
+  </div>
+  <button class="btn btn-primary" onclick="openModal('modal-add-reservation')">+ Book Table</button>
+</div>
+
+<!-- Reservations Table -->
+{% if reservations %}
+<div class="card">
+  <div class="table-wrapper">
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>Guest Name</th>
+          <th>Contact</th>
+          <th>Date & Time</th>
+          <th>Table No.</th>
+          <th>Guests</th>
+          <th>Status</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for res in reservations %}
+        <tr>
+          <td class="td-name">#{{ res.id }}</td>
+          <td>{{ res.customer.name }}</td>
+          <td class="text-muted">{{ res.customer.contact }}</td>
+          <td>{{ res.date.strftime('%d %b %Y, %I:%M %p') }}</td>
+          <td>
+            <span style="font-weight:700; color:var(--accent);">Table {{ res.table_no }}</span>
+          </td>
+          <td>{{ res.guest_count }} 👤</td>
+          <td>
+            <span class="badge badge-{{ res.status.lower() }}">{{ res.status }}</span>
+          </td>
+          <td>
+            {% if res.status == 'Confirmed' %}
+            <!-- Cancel reservation -->
+            <form method="POST" action="{{ url_for('cancel_reservation', res_id=res.id) }}"
+                  style="display:inline;">
+              <button type="submit" class="btn btn-danger btn-sm"
+                      onclick="return confirm('Cancel this reservation?')">Cancel</button>
+            </form>
+            {% else %}
+            <span class="text-muted" style="font-size:12px;">—</span>
+            {% endif %}
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% else %}
+<div class="empty-state">
+  <div class="empty-icon">📅</div>
+  No reservations yet. Book your first table!
+</div>
+{% endif %}
+
+
+<!-- ═══════════ MODAL: Add Reservation ══════════════════════════ -->
+<div class="modal-overlay" id="modal-add-reservation">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">📅 Book a Table</div>
+      <button class="modal-close" onclick="closeModal('modal-add-reservation')">✕</button>
+    </div>
+    <form method="POST" action="{{ url_for('add_reservation') }}">
+
+      <!-- Choose existing customer or walk-in -->
+      <div class="form-group">
+        <label class="form-label">Existing Customer</label>
+        <select name="customer_id" class="form-control"
+                onchange="toggleGuestFields(this.value)">
+          <option value="">— Walk-in Guest —</option>
+          {% for c in customers %}
+          <option value="{{ c.id }}">{{ c.name }} ({{ c.contact }})</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Walk-in guest fields -->
+      <div id="guest-fields">
+        <div class="form-row">
+          <div class="form-group">
+            <label class="form-label">Guest Name *</label>
+            <input type="text" name="guest_name" class="form-control" placeholder="Full name">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Contact</label>
+            <input type="text" name="guest_contact" class="form-control" placeholder="Phone number">
+          </div>
+        </div>
+      </div>
+
+      <div class="form-row">
+        <div class="form-group">
+          <label class="form-label">Date & Time *</label>
+          <input type="datetime-local" name="date" class="form-control" required>
+        </div>
+        <div class="form-group">
+          <label class="form-label">No. of Guests *</label>
+          <input type="number" name="guest_count" class="form-control"
+                 required min="1" max="20" placeholder="e.g. 4">
+        </div>
+      </div>
+
+      <div class="form-group">
+        <label class="form-label">Table Number *</label>
+        <select name="table_no" class="form-control" required>
+          {% for t in range(1, 16) %}
+          <option value="{{ t }}">Table {{ t }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <div style="display:flex; gap:10px; justify-content:flex-end; margin-top:8px">
+        <button type="button" class="btn btn-outline"
+                onclick="closeModal('modal-add-reservation')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Confirm Booking</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleGuestFields(val) {
+  document.getElementById('guest-fields').style.display = val ? 'none' : 'block';
+}
+</script>
+{% endblock %}
