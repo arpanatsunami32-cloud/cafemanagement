@@ -65,9 +65,20 @@ function editStaff(id, name, position, contact) {
 }
 
 // ── Confirm Delete ────────────────────────────────────────────
-function confirmDelete(formId) {
-  if (confirm('Are you sure you want to delete this item?')) {
-    document.getElementById(formId).submit();
+// Stop event propagation so the modal-overlay click listener
+// doesn't fire and swallow the action. Then confirm and submit.
+function confirmDelete(formId, event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
+  }
+  if (confirm('Are you sure you want to delete this?')) {
+    const form = document.getElementById(formId);
+    if (form) {
+      form.submit();
+    } else {
+      console.error('Delete form not found: ' + formId);
+    }
   }
 }
 

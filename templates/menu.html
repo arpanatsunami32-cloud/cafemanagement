@@ -51,10 +51,8 @@
       )">✏️ Edit</button>
 
       <!-- Delete form -->
-      <form method="POST" action="{{ url_for('delete_menu_item', item_id=item.id) }}"
-            id="del-item-{{ item.id }}" style="display:inline">
-        <button type="button" class="btn btn-danger btn-sm"
-                onclick="confirmDelete('del-item-{{ item.id }}')">🗑️ Delete</button>
+      <form method="POST" action="{{ url_for('delete_menu_item', item_id=item.id) }}" style="display:inline">
+        <button type="submit" class="btn btn-danger btn-sm">🗑️ Delete</button>
       </form>
     </div>
   </div>

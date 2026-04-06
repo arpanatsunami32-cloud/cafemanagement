@@ -16,9 +16,9 @@ class Customer(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # One customer can have many orders
-    orders = db.relationship('Order', backref='customer', lazy=True)
+    orders = db.relationship('Order', backref='customer', lazy=True, cascade='all, delete')
     # One customer can have many reservations
-    reservations = db.relationship('Reservation', backref='customer', lazy=True)
+    reservations = db.relationship('Reservation', backref='customer', lazy=True, cascade='all, delete')
 
 
 # ─────────────────────────────────────────────
@@ -33,6 +33,12 @@ class Employee(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
 
     # One employee can process many orders
+    # We will just let employee_id become NULL since it is nullable=True,
+    # OR we can cascade delete the orders? Wait, we shouldn't delete orders 
+    # when an employee is deleted. But if SQLAlchemy fails to set it to NULL automatically,
+    # let's set lazy='dynamic' or just ignore? Actually, the default is save-update, merge. 
+    # Let's leave it as is, or wait! If lazy=True, SQLAlchemy will update orders to set employee_id = NULL. 
+    # Let's change backref to ensure it allows nulling out.
     orders = db.relationship('Order', backref='employee', lazy=True)
 
 
